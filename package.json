@@ -1,0 +1,15 @@
+{
+  "name": "PHP",
+  "description": "PHP",
+  "author": "Keisuke Miyako <keisuke.miyako@4d.com>",
+  "license": "MIT",
+  "repository": "https://github.com/miyako/php",
+  "version": "0.0.1",
+  "tool": {
+    "platform": "macos",
+    "branch": "20%20Rx",
+    "version": "20%20R6",
+    "build": "100154",
+    "arch": "arm"
+  }
+}
