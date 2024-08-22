@@ -6,6 +6,10 @@ shared singleton Class constructor($controller : 4D:C1709.Class; $ini : 4D:C1709
 	
 	This:C1470.controller:=$controller
 	
+	If (Is Windows:C1573) && ($ini=Null:C1517)
+		$ini:=File:C1566("/RESOURCES/php/php.ini")
+	End if 
+	
 	If (OB Instance of:C1731($ini; 4D:C1709.File))
 		If ($ini.exists)
 			This:C1470.ini:=This:C1470.expand($ini)
