@@ -1,0 +1,300 @@
+{
+	"$4d": {
+		"version": "1",
+		"kind": "form"
+	},
+	"css": "form.css",
+	"windowSizingX": "variable",
+	"windowSizingY": "variable",
+	"windowMinWidth": 686,
+	"windowMinHeight": 492,
+	"windowMaxWidth": 32767,
+	"windowMaxHeight": 32767,
+	"events": [
+		"onLoad",
+		"onUnload"
+	],
+	"windowTitle": "",
+	"destination": "detailScreen",
+	"pages": [
+		{
+			"objects": {
+				"Logo": {
+					"type": "button",
+					"text": "",
+					"top": 0,
+					"left": 0,
+					"width": 169,
+					"height": 88,
+					"events": [
+						"onClick"
+					],
+					"icon": "Images/PHP-logo.png",
+					"style": "custom",
+					"imageHugsTitle": true,
+					"textPlacement": "right",
+					"focusable": false,
+					"textAlign": "center"
+				}
+			}
+		},
+		{
+			"objects": {
+				"Input": {
+					"type": "input",
+					"left": 10,
+					"top": 362,
+					"width": 666,
+					"height": 30,
+					"enterable": true,
+					"showSelection": false,
+					"multiline": "automatic",
+					"wordwrap": "none",
+					"scrollbarVertical": "hidden",
+					"fill": "automatic",
+					"dataSource": "Form:C1466.input",
+					"borderStyle": "none",
+					"contextMenu": "automatic",
+					"events": [
+						"onDataChange"
+					],
+					"sizingX": "grow",
+					"sizingY": "move",
+					"right": 676,
+					"class": "input"
+				},
+				"Output": {
+					"type": "listbox",
+					"left": 10,
+					"top": 90,
+					"width": 666,
+					"height": 262,
+					"events": [
+						"onClick"
+					],
+					"horizontalLineStroke": "transparent",
+					"verticalLineStroke": "transparent",
+					"showHeaders": false,
+					"listboxType": "collection",
+					"dataSource": "Form:C1466.output",
+					"selectionMode": "none",
+					"resizingMode": "legacy",
+					"scrollbarHorizontal": "hidden",
+					"scrollbarVertical": "visible",
+					"focusable": false,
+					"alternateFill": "automaticAlternate",
+					"sizingX": "grow",
+					"sizingY": "grow",
+					"sortable": false,
+					"method": "ObjectMethods/Output.4dm",
+					"right": 676,
+					"class": "output",
+					"columns": [
+						{
+							"header": {
+								"text": "Header1",
+								"name": "Header1"
+							},
+							"name": "Column1",
+							"footer": {
+								"name": "Footer1"
+							},
+							"resizable": false,
+							"enterable": false,
+							"dataSource": "This:C1470.value"
+						}
+					]
+				},
+				"Rewind": {
+					"type": "button",
+					"text": "Rewind",
+					"top": 542,
+					"left": 30,
+					"width": 40,
+					"height": 20,
+					"events": [
+						"onClick"
+					],
+					"focusable": false,
+					"shortcutAccel": false,
+					"shortcutControl": false,
+					"shortcutShift": false,
+					"shortcutAlt": false,
+					"shortcutKey": "[up arrow]",
+					"method": "ObjectMethods/Rewind.4dm",
+					"display": false,
+					"style": "regular",
+					"sizingY": "move"
+				},
+				"Forward": {
+					"type": "button",
+					"text": "Forward",
+					"top": 542,
+					"left": 90,
+					"width": 40,
+					"height": 20,
+					"events": [
+						"onClick"
+					],
+					"focusable": false,
+					"shortcutAccel": false,
+					"shortcutControl": false,
+					"shortcutShift": false,
+					"shortcutAlt": false,
+					"shortcutKey": "[down arrow]",
+					"method": "ObjectMethods/Forward.4dm",
+					"display": false,
+					"sizingY": "move"
+				},
+				"History": {
+					"type": "listbox",
+					"left": 225,
+					"top": 544,
+					"width": 230,
+					"height": 16,
+					"events": [
+						"onClick",
+						"onHeaderClick",
+						"onDataChange",
+						"onSelectionChange"
+					],
+					"horizontalLineStroke": "transparent",
+					"verticalLineStroke": "transparent",
+					"showHeaders": false,
+					"listboxType": "collection",
+					"dataSource": "Form:C1466.history",
+					"selectionMode": "none",
+					"resizingMode": "legacy",
+					"scrollbarHorizontal": "hidden",
+					"scrollbarVertical": "hidden",
+					"focusable": false,
+					"fill": "transparent",
+					"borderStyle": "none",
+					"visibility": "visible",
+					"sizingY": "move",
+					"columns": [
+						{
+							"header": {
+								"text": "Header1",
+								"name": "Header2"
+							},
+							"name": "Column2",
+							"footer": {
+								"name": "Footer2"
+							},
+							"resizable": false,
+							"enterable": false,
+							"dataSource": "This:C1470.value"
+						}
+					]
+				},
+				"Return": {
+					"type": "button",
+					"text": "Return",
+					"top": 542,
+					"left": 150,
+					"width": 40,
+					"height": 20,
+					"events": [
+						"onClick"
+					],
+					"focusable": false,
+					"shortcutAccel": false,
+					"shortcutControl": false,
+					"shortcutShift": false,
+					"shortcutAlt": false,
+					"shortcutKey": "[Return]",
+					"method": "ObjectMethods/Return.4dm",
+					"display": false,
+					"sizingY": "move"
+				},
+				"echo": {
+					"type": "button",
+					"text": "echo",
+					"top": 409,
+					"left": 10,
+					"width": 76,
+					"height": 33,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/echo.4dm",
+					"sizingY": "move",
+					"focusable": false,
+					"class": "code"
+				},
+				"strtotime": {
+					"type": "button",
+					"text": "strtotime",
+					"top": 409,
+					"left": 100,
+					"width": 136,
+					"height": 33,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/strtotime.4dm",
+					"sizingY": "move",
+					"focusable": false,
+					"class": "code"
+				},
+				"mb_convert_kana": {
+					"type": "button",
+					"text": "mb_convert_kana",
+					"top": 409,
+					"left": 250,
+					"width": 216,
+					"height": 33,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/mb_convert_kana.4dm",
+					"sizingY": "move",
+					"focusable": false,
+					"class": "code"
+				},
+				"phpinfo": {
+					"type": "button",
+					"text": "phpinfo",
+					"top": 449,
+					"left": 10,
+					"width": 116,
+					"height": 33,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/phpinfo.4dm",
+					"sizingY": "move",
+					"focusable": false,
+					"class": "code"
+				},
+				"date_sun_info": {
+					"type": "button",
+					"text": "date_sun_info",
+					"top": 409,
+					"left": 480,
+					"width": 196,
+					"height": 33,
+					"events": [
+						"onClick"
+					],
+					"method": "ObjectMethods/date_sun_info.4dm",
+					"sizingY": "move",
+					"focusable": false,
+					"class": "code"
+				}
+			}
+		}
+	],
+	"geometryStamp": 538,
+	"method": "method.4dm",
+	"editor": {
+		"activeView": "View 1",
+		"defaultView": "View 1",
+		"views": {
+			"View 1": {}
+		}
+	},
+	"width": 686,
+	"height": 492
+}
