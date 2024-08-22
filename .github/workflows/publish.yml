@@ -33,8 +33,8 @@ jobs:
       - name: configure
         id: configure
         run: |
-          if [ ${mode} = '' ]; then
-          echo "mode=patch" >> $GITHUB_OUTPUT          
+          if [ "${mode}" = "" ]; then
+          echo "mode=patch" >> $GITHUB_OUTPUT
           else
           echo "mode=${mode}" >> $GITHUB_OUTPUT
           fi
@@ -50,7 +50,7 @@ jobs:
         id: version
         uses: miyako/4D/.github/actions/package-set-version@v1
         with:
-          mode: ${{ inputs.mode }}
+          mode: ${{ steps.configure.outputs.mode }}
 
       - name: get tool version
         id: tool
