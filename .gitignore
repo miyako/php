@@ -1,0 +1,4 @@
+php/userPreferences.*
+php/Project/DerivedData/*
+php/Data/*
+php/Settings/backup.4DSettings
