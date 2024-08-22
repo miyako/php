@@ -36,3 +36,39 @@ If (PHP Execute($phpFile.platformPath; "sum"; $returnValue; 5; 3))
 	ALERT($returnValue)
 End if
 ```
+
+to test CGI mode
+
+```4d
+#DECLARE($params : Object)
+
+If (Count parameters=0)
+	CALL WORKER(1; Current method name; {})
+Else 
+	$form:=cs.PHP.CGI_PHPForm.new()
+End if
+```
+
+to test interactive
+
+```4d
+#DECLARE($params : Object)
+
+If (Count parameters=0)
+	CALL WORKER(1; Current method name; {})
+Else 
+	$form:=cs.PHP.Interactive_PHPForm.new()
+End if
+```
+
+to test one-shot
+
+```4d
+#DECLARE($params : Object)
+
+If (Count parameters=0)
+	CALL WORKER(1; Current method name; {})
+Else 
+	$form:=cs.PHP.Run_PHPForm.new()
+End if 
+```
