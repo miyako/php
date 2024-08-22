@@ -24,7 +24,7 @@ The CGI class has been refactored as a Shared Singleton.
 ## Usage
 
 ```4d
-$CGI:=cs.PHP.PHP_CGI.new(cs.PHP._PHP_CGI_Controller; $ini).cgi()
+$CGI:=cs.PHP.PHP_CGI.new(cs.PHP._PHP_CGI_Controller).cgi()
 
 $php:="<?php\n\nfunction sum(int $a, int $b): int {\nreturn $a + $b;\n}\n"
 
