@@ -20,3 +20,19 @@
 Based on [miyako/4d-class-php](https://github.com/miyako/4d-class-php).
 
 The CGI class has been refactored as a Shared Singleton.
+
+## Usage
+
+```4d
+$CGI:=cs.PHP.PHP_CGI.new(cs.PHP._PHP_CGI_Controller; $ini).cgi()
+
+$php:="<?php\n\nfunction sum(int $a, int $b): int {\nreturn $a + $b;\n}\n"
+
+$phpFile:=Folder(fk desktop folder).file("test.php")
+$phpFile.setText($php)
+
+var $returnValue : Text
+If (PHP Execute($phpFile.platformPath; "sum"; $returnValue; 5; 3))
+	ALERT($returnValue)
+End if
+```
