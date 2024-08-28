@@ -2,8 +2,6 @@
 [![license](https://img.shields.io/github/license/miyako/php)](LICENSE)
 ![downloads](https://img.shields.io/github/downloads/miyako/php/total)
 
-# php
-
 ## dependencies.json
 
 ```json
