@@ -3,6 +3,13 @@
 [![license](https://img.shields.io/github/license/miyako/php)](LICENSE)
 ![downloads](https://img.shields.io/github/downloads/miyako/php/total)
 
+### Licensing
+
+* the source code of this component is licensed under the [MIT license](https://github.com/miyako/php/blob/master/LICENSE).
+* see [php.net](https://www.php.net/license/index.php) for the licensing of **PHP**.
+
+# php
+
 ## dependencies.json
 
 ```json
