@@ -32,7 +32,7 @@ Function get utilityFile()
 	
 	return This:C1470._utilityFile
 	
-Function get FULL_PATH_TO_4D_Execute_PHP()
+Function get FULL_PATH_TO_4D_Execute_PHP() : Text
 	
 	return This:C1470.quote(This:C1470.utilityFile.path)
 	

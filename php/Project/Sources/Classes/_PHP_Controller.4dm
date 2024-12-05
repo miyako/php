@@ -11,6 +11,7 @@ Function onDataError($worker : 4D:C1709.SystemWorker; $params : Object)
 Function onResponse($worker : 4D:C1709.SystemWorker; $params : Object)
 	
 	This:C1470.instance.data:=$worker.response
+	This:C1470.instance.error:=$worker.responseError
 	
 Function onError($worker : 4D:C1709.SystemWorker; $params : Object)
 	
