@@ -1,3 +1,5 @@
+property utilityFile : 4D:C1709.File
+
 Class extends _CGI
 
 shared singleton Class constructor($controller : 4D:C1709.Class; $ini : 4D:C1709.File)

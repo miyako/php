@@ -2,9 +2,9 @@ shared singleton Class constructor($name : Text)
 	
 	This:C1470._name:=$name
 	This:C1470._isRunning:=False:C215
-	
+	//%W-520.19
 	var __CLI__ : Object
-	
+	//%W+520.19
 Function get name()
 	
 	return This:C1470._name
