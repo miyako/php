@@ -1,0 +1,3 @@
+php/Settings/buildApp.4DSettings
+php_Build/*
+php/Libraries/lib4d-arm64.dylib
