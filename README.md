@@ -17,7 +17,7 @@
 	"dependencies": {
 		"php": {
 			"github": "miyako/php",
-			"version": "*"
+			"version": "latest"
 		}
 	}
 }
