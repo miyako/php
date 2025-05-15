@@ -14,6 +14,10 @@
 
 *  [shared singleton](https://blog.4d.com/singletons-in-4d/)
 
+![version](https://img.shields.io/badge/20%20R3%2B-E23089)
+
+* [variadic function](https://blog.4d.com/a-fresh-approach-to-writing-variadic-functions/)
+
 # php
 
 ## dependencies.json
