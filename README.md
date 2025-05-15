@@ -25,8 +25,6 @@
 
 Based on [miyako/4d-class-php](https://github.com/miyako/4d-class-php).
 
-The CGI class has been refactored as a Shared Singleton.
-
 ## Usage
 
 ```4d
