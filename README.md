@@ -8,6 +8,8 @@
 * the source code of this component is licensed under the [MIT license](https://github.com/miyako/php/blob/master/LICENSE).
 * see [php.net](https://www.php.net/license/index.php) for the licensing of **PHP**.
 
+switch to [`20.x`](https://github.com/miyako/php/tree/20.x) branch for 4D 20 LTS compatible version.
+
 ### Compatibility
 
 ![version](https://img.shields.io/badge/20%20R5%2B-E23089)
