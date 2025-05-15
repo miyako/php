@@ -2,7 +2,7 @@ property utilityFile : 4D:C1709.File
 
 Class extends _CGI
 
-shared singleton Class constructor($controller : 4D:C1709.Class; $ini : 4D:C1709.File)
+Class constructor($controller : 4D:C1709.Class; $ini : 4D:C1709.File)
 	
 	Super:C1705("PHP")
 	
@@ -75,14 +75,14 @@ Function _cgi($class : 4D:C1709.Class; $ini : 4D:C1709.File)->$controller : cs:C
 	
 	$options.address:=(Get database parameter:C643(PHP interpreter IP address:K37:59; $stringValue)) && $stringValue
 	$options.port:=Get database parameter:C643(PHP interpreter port:K37:55)
-	$options.children:=Get database parameter:C643(_o_PHP number of children:K37:56)
-	$options.requests:=Get database parameter:C643(_o_PHP max requests:K37:57)
+	$options.children:=Get database parameter:C643(PHP number of children:K37:56)
+	$options.requests:=Get database parameter:C643(PHP max requests:K37:57)
 	
-	SET DATABASE PARAMETER:C642(_o_PHP use external interpreter:K37:58; 1)
+	SET DATABASE PARAMETER:C642(PHP use external interpreter:K37:58; 1)
 	
 	$controller:=cs:C1710._PHP_CGI_CLI.new($class; $ini).cgi($options)
 	
-shared Function _setPhpIni($ini : Text)
+Function _setPhpIni($ini : Text)
 	
 	This:C1470.ini:=This:C1470.expand(File:C1566("/LOGS/php-cgi.ini"))
 	This:C1470.ini.setText($ini)

@@ -1,4 +1,4 @@
-shared singleton Class constructor($name : Text)
+Class constructor($name : Text)
 	
 	This:C1470._name:=$name
 	This:C1470._isRunning:=False:C215
@@ -13,7 +13,7 @@ Function get isRunning : Boolean
 	
 	return This:C1470._isRunning
 	
-shared Function setRunning($isRunning : Boolean)
+Function setRunning($isRunning : Boolean)
 	
 	This:C1470._isRunning:=$isRunning
 	
@@ -25,7 +25,9 @@ Function quote($in : Text)->$out : Text
 	
 	$out:="\""+$in+"\""
 	
-Function start($function : 4D:C1709.Function;  ... )
+Function start($function : 4D:C1709.Function)
+	
+	C_VARIANT:C1683(${2})
 	
 	$signal:=New signal:C1641
 	
