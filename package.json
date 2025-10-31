@@ -4,11 +4,11 @@
   "author": "Keisuke Miyako <keisuke.miyako@4d.com>",
   "license": "MIT",
   "repository": "https://github.com/miyako/php",
-  "version": "20R5.24",
+  "version": "21.0.0",
   "tool": {
     "platform": "macos",
     "branch": "20%20Rx",
-    "version": "20%20R8",
+    "version": "20%20R10",
     "build": "latest",
     "arch": "arm"
   }
