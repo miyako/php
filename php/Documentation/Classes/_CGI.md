@@ -1,39 +1,55 @@
 # _CGI
+### Abstract shared singleton base class for managing a long-running CGI/FastCGI process in a named worker.
 
-`_CGI` is a class for managing local CGI instances in a worker. Extend this class to control a specific CGI program. The CGI should use be launched as a `_CLI` instance.
+> _CGI.new (name : Text)
 
-## .new() 
+| Parameter | Type | | Description |
+| --- | --- | --- | --- |
+| name | Text | -> | Worker name used to identify this singleton's named worker process |
 
-**.new**($name : Text) : cs._CGI
+## Description
 
-`$name` will be the worker name spawned to start the CGI. The callee process need not be a worker. The name is also used as a global semaphore to prevent the creation of multiple instance of the same CGI.
+`_CGI` is a **shared singleton** base class. It manages the lifecycle of a `_CLI` instance that must live inside a dedicated named 4D worker — necessary because a `4D.SystemWorker` cannot be shared across process boundaries.
 
-Properties:
+`start` and `stop` synchronise across process boundaries using `4D.Signal`: the caller blocks until the named worker has completed the requested operation.
 
-|Property|Type|Description|
-|:-|:-|:-|
-|name|Text|unique name that identifies the CGI (read-only)|
+### Properties
 
-## .expand() 
+| Property | Type | Description |
+| --- | --- | --- |
+| name | Text | Worker name (read-only) |
+| isRunning | Boolean | `True` when the CGI process is active (read-only) |
 
-**.expand**($in : Object) : Object
+### Methods
 
-Expand a file system path of a `4D.File` or `4D.Folder` to a platform path suitable for the command line interface.
+#### start (function : 4D.Function; …) 
 
-## .quote() 
+Signals the named worker to start the CGI process. Blocks the caller until the worker confirms startup via a signal.
 
-**.quote**($in : Text) : Text
+| Parameter | Type | | Description |
+| --- | --- | --- | --- |
+| function | 4D.Function | -> | Factory function called inside the named worker to create the `_CLI` instance |
+| … | Variant | -> | Additional parameters forwarded to `function` |
 
-Double-quote a path string.
+The `_CLI` instance created by `function` is stored in the process variable `__CLI__` inside the named worker (because a `4D.SystemWorker` cannot be cloned as a shared object). `setRunning(True)` is called and the signal is triggered when done.
 
-## .start() 
+#### stop ()
 
-**.start**($function : 4D.Function)
+Signals the named worker to terminate the running `_CLI` worker. Blocks until confirmed. After stopping, `KILL WORKER` is called to end the named worker process itself.
 
-Invoke `$function` in a worker `This.name` with a global semaphore. The function should launch the CGI and return an instance of `_CLI`. The instance is stored in a process variable in the worker's execution context and used to terminate the CGI in `This.stop()`.
+#### setRunning (isRunning : Boolean) *(shared)*
 
-## .stop() 
+Updates the `isRunning` flag. Must be called inside a `Use`/`End use` block (handled automatically by `start` and `stop`).
 
-**.stop**()
+#### expand (in : Object) → Object
 
-Invoke `4D.SystemWorker.terminate()` with a global semaphore. 
+Re-creates a `4D.File` or `4D.Folder` from its platform path. Inherited by subclasses.
+
+#### quote (in : Text) → Text
+
+Wraps a string in double quotes.
+
+## See also
+
+- [`PHP_CGI`](PHP_CGI.md) — extends `_CGI` for the `php-cgi` FastCGI process
+- [`_PHP_CGI_CLI`](_PHP_CGI_CLI.md) — the `_CLI` subclass instantiated inside the named worker
