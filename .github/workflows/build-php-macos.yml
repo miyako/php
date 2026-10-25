@@ -1,0 +1,285 @@
+name: Build macOS PHP
+
+on:
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: "Official stable PHP version, or latest"
+        type: string
+        default: latest
+      sign:
+        description: "Sign with Developer ID and notarize (requires Apple secrets)"
+        type: boolean
+        default: true
+      publish:
+        description: "Publish a signed runtime GitHub release after both architectures pass"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      php_version:
+        type: string
+        default: latest
+      sign:
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - .github/workflows/build-php-macos.yml
+      - scripts/php-macos/**
+      - .github/actions/php-macos-tools/**
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test build helpers
+        run: python3 scripts/php-macos/test-tools.py
+      - name: Resolve official PHP source and checksum
+        id: release
+        env:
+          PHP_VERSION: ${{ inputs.php_version || 'latest' }}
+          PUBLISH: ${{ inputs.publish }}
+          SIGN: ${{ inputs.sign }}
+        run: |
+          if [[ "$PUBLISH" == true && "$SIGN" != true ]]; then
+            echo "Publishing requires Developer ID signing and notarization." >&2
+            exit 1
+          fi
+          python3 scripts/php-macos/resolve-release.py "$PHP_VERSION" --output php-release.json
+          python3 -c 'import json; print("version=" + json.load(open("php-release.json"))["version"])' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-release-metadata
+          path: php-release.json
+          if-no-files-found: error
+
+  prepare:
+    needs: resolve
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-release-metadata
+      - uses: ./.github/actions/php-macos-tools
+      - name: Resolve and freeze common source inputs once
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SPC_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          bash scripts/php-macos/prepare.sh php-release.json build/php-macos-input
+          tar -czf build/php-macos-build-inputs.tar.gz -C build php-macos-input
+          cd build
+          shasum -a 256 php-macos-build-inputs.tar.gz > SOURCE-SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-macos-build-inputs
+          path: |
+            build/php-macos-build-inputs.tar.gz
+            build/SOURCE-SHA256SUMS
+          if-no-files-found: error
+
+  build:
+    needs: [resolve, prepare]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x86_64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-build-inputs
+          path: build/downloads
+      - uses: ./.github/actions/php-macos-tools
+      - name: Test macOS assembly and signing failure paths
+        run: python3 scripts/php-macos/test-tools.py
+      - name: Restore frozen source inputs
+        run: |
+          cd build/downloads
+          shasum -a 256 -c SOURCE-SHA256SUMS
+          tar -xzf php-macos-build-inputs.tar.gz -C ..
+      - name: Build static CLI and FastCGI slice
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: bash scripts/php-macos/build.sh build/php-macos-input "build/slices/$EXPECTED_ARCH"
+      - name: Test native slice
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          python3 scripts/php-macos/smoke-test.py "build/slices/$EXPECTED_ARCH" \
+            --version "$PHP_VERSION" --modules scripts/php-macos/modules.txt --tls --system-ca --features
+          ditto -c -k --keepParent "build/slices/$EXPECTED_ARCH" "build/$EXPECTED_ARCH.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-slice-${{ matrix.arch }}
+          path: build/${{ matrix.arch }}.zip
+          if-no-files-found: error
+      - name: Preserve native build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-build-logs-${{ matrix.arch }}
+          path: |
+            build/php-macos-input/log/
+            build/php-macos-input/license-dump.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  universal:
+    needs: [resolve, build]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: php-slice-*
+          path: build/downloads
+          merge-multiple: true
+      - name: Assemble universal binaries
+        run: |
+          mkdir -p build/slices
+          ditto -x -k build/downloads/arm64.zip build/slices
+          ditto -x -k build/downloads/x86_64.zip build/slices
+          bash scripts/php-macos/assemble.sh build/slices build/macOS
+          ditto -c -k --keepParent build/macOS build/php-macos-universal.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-macos-universal
+          path: build/php-macos-universal.zip
+          if-no-files-found: error
+
+  test-universal:
+    needs: [resolve, universal]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-universal
+          path: build
+      - name: Test universal binary on native hardware
+        env:
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          ditto -x -k build/php-macos-universal.zip build
+          bash scripts/php-macos/verify-binaries.sh build/macOS
+          python3 scripts/php-macos/smoke-test.py build/macOS \
+            --version "$PHP_VERSION" --modules scripts/php-macos/modules.txt --tls --system-ca --features
+
+  sign:
+    needs: [resolve, test-universal]
+    if: ${{ inputs.sign == true && github.event_name != 'pull_request' }}
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-universal
+          path: build
+      - run: ditto -x -k build/php-macos-universal.zip build
+      - name: Sign, notarize, and staple
+        env:
+          APPLE_DEVELOPER_ID_CERTIFICATE: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE }}
+          APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          CODESIGN_APPLE_ID: ${{ secrets.CODESIGN_APPLE_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          NOTARYTOOL_APPLE_ID: ${{ secrets.NOTARYTOOL_APPLE_ID }}
+          NOTARYTOOL_PASSWORD: ${{ secrets.NOTARYTOOL_PASSWORD }}
+          NOTARYTOOL_TEAM_ID: ${{ secrets.NOTARYTOOL_TEAM_ID }}
+        run: bash scripts/php-macos/sign-package.sh build/macOS build/distribution
+      - name: Preserve notarization diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-macos-notary-diagnostics
+          path: build/distribution/notary-*.json
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-macos-signed
+          path: |
+            build/distribution/*.zip
+            build/distribution/*.dmg
+            build/distribution/SHA256SUMS
+          if-no-files-found: error
+
+  test-signed:
+    needs: [resolve, sign]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-signed
+          path: build/distribution
+      - name: Verify and exercise hardened runtime signatures
+        env:
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          cd build/distribution
+          shasum -a 256 -c SHA256SUMS
+          xcrun stapler validate "php-$PHP_VERSION-macos-universal.dmg"
+          ditto -x -k "php-$PHP_VERSION-macos-universal.zip" ..
+          cd ../..
+          for executable in php php-cgi; do
+            codesign --verify --strict --all-architectures --verbose=2 "build/macOS/$executable"
+          done
+          bash scripts/php-macos/verify-binaries.sh build/macOS
+          python3 scripts/php-macos/smoke-test.py build/macOS \
+            --version "$PHP_VERSION" --modules scripts/php-macos/modules.txt --tls --system-ca --features
+
+  release:
+    needs: [resolve, test-signed]
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true && inputs.sign == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-signed
+          path: distribution
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-macos-build-inputs
+          path: distribution
+      - name: Publish signed runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          gh release create "php-runtime-$PHP_VERSION-$GITHUB_RUN_ID" distribution/* \
+            --target "$GITHUB_SHA" --latest=false --title "PHP $PHP_VERSION for macOS" \
+            --notes "Universal arm64/x86_64 CLI and FastCGI runtime. Third-party libraries are statically linked; macOS system libraries remain dynamic. Developer ID signed; the DMG is notarized and stapled. See the bundled build manifest and licenses."

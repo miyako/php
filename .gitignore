@@ -1,3 +1,6 @@
 php/Settings/buildApp.4DSettings
 php_Build/*
 php/Libraries/lib4d-arm64.dylib
+/build/
+/scripts/php-macos/__pycache__/
+/scripts/php-windows/__pycache__/

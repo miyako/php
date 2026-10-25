@@ -1,0 +1,12 @@
+diff --git a/src/Package/Library/sqlite.php b/src/Package/Library/sqlite.php
+--- a/src/Package/Library/sqlite.php
++++ b/src/Package/Library/sqlite.php
+@@ -21,6 +21,7 @@
+         UnixAutoconfExecutor::create($lib)
++            ->removeConfigureArgs('--with-pic', '--enable-pic')
+             ->appendEnv([
+-                'CFLAGS' => '-DSQLITE_ENABLE_COLUMN_METADATA=1',
++                'CFLAGS' => '-DSQLITE_ENABLE_COLUMN_METADATA=1 -fPIC',
+             ])
+             ->configure()
+             ->make();

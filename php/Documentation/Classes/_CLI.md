@@ -25,6 +25,13 @@ Platform identifiers:
 
 Note: this version of `_CLI` does not include ARM detection on Windows. The `currentDirectory` for workers defaults to the system temporary folder rather than the executable's directory.
 
+When a bundled Windows `php.ini` is present, the controller's per-worker variables
+include `_4D_PHP_RUNTIME`, set to the runtime folder's platform path. This does not
+change the application-wide environment or the worker's current directory.
+Inherited INI scanning is disabled by default to avoid loading another PHP
+installation's DLLs. A controller can explicitly provide `PHP_INI_SCAN_DIR` to
+opt into its own scan directory.
+
 ### Properties (read-only)
 
 | Property | Type | Description |

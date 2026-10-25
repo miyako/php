@@ -1,0 +1,22 @@
+{
+  "extensions": [
+    "mbstring", "exif", "fileinfo", "curl", "ftp", "gd", "gmp", "ldap",
+    "mysqli", "openssl", "pdo_sqlite", "sqlite3", "sockets", "tidy", "zip"
+  ],
+  "required_modules": [
+    "bcmath", "calendar", "Core", "ctype", "curl", "date", "dom", "exif",
+    "fileinfo", "filter", "ftp", "gd", "gmp", "hash", "iconv", "json", "ldap",
+    "libxml", "mbstring", "mysqli", "mysqlnd", "openssl", "pcre", "PDO",
+    "pdo_sqlite", "Phar", "random", "readline", "Reflection", "session",
+    "SimpleXML", "sockets", "SPL", "sqlite3", "standard", "tidy", "tokenizer",
+    "xml", "xmlreader", "xmlwriter", "zip", "zlib"
+  ],
+  "ca": {
+    "url": "https://curl.se/ca/cacert-2026-10-20.pem",
+    "sha256": "796f1389bfea13c0ed78f663b765baaff54a508e5483786bd6ece73c5e3e3cbe"
+  },
+  "ca_license": {
+    "url": "https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+  }
+}

@@ -10,6 +10,21 @@
 
 Use PHP as one-shot CLI, FastCGI, or interactive worker process.
 
+## Building PHP for macOS
+
+The [macOS PHP build system](scripts/php-macos/README.md) builds the latest stable
+PHP CLI and FastCGI interpreters from source for Apple Silicon and Intel, combines
+them into universal binaries, and supports Developer ID signing and Apple
+notarization. Third-party dependencies are linked statically; macOS system
+libraries remain dynamic.
+
+## Packaging PHP for Windows
+
+The [Windows PHP packaging system](scripts/php-windows/README.md) downloads and
+verifies the latest official x64 NTS distribution, configures its DLL extensions
+for relocatable 4D workers, records vendor Authenticode status, and packages it
+only after native Windows CLI and FastCGI checks succeed.
+
 ## Usage
 
 ```4d

@@ -12,6 +12,10 @@
 
 `_PHP_CGI_CLI` extends [`_CLI`](_CLI.md) targeting the `php-cgi` executable. It resolves and stores the `ini` path, then provides `cgi()` to assemble the command and start the worker.
 
+On Windows a `Null` INI selects the bundled `php.ini` when present. Its extension
+and certificate paths use the per-worker `_4D_PHP_RUNTIME` variable supplied by
+`_CLI`, rather than the worker's temporary working directory.
+
 It is not used directly by application code; it is instantiated inside the named worker by [`_CGI.start`](_CGI.md) via [`PHP_CGI._cgi`](PHP_CGI.md).
 
 ### Methods

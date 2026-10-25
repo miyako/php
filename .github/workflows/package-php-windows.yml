@@ -1,0 +1,128 @@
+name: Package Windows PHP
+
+on:
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: "Official stable PHP version currently in the Windows release index, or latest"
+        type: string
+        default: latest
+      publish:
+        description: "Publish the tested official NTS runtime as a separate GitHub release"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      php_version:
+        type: string
+        default: latest
+  pull_request:
+    paths:
+      - .github/workflows/package-php-windows.yml
+      - scripts/php-windows/**
+      - scripts/php-macos/smoke-test.py
+      - php/Project/Sources/Classes/**
+      - php/Resources/php/_4D_Execute_PHP.php
+  schedule:
+    - cron: "43 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Windows packaging helpers
+        run: python3 scripts/php-windows/test-tools.py
+      - name: Resolve the latest official stable x64 NTS release
+        id: release
+        env:
+          PHP_VERSION: ${{ inputs.php_version || 'latest' }}
+        run: |
+          python3 scripts/php-windows/package.py resolve --version "$PHP_VERSION" --output windows-release.json
+          python3 -c 'import json; print("version=" + json.load(open("windows-release.json"))["version"])' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-windows-release-metadata
+          path: windows-release.json
+          if-no-files-found: error
+
+  package:
+    needs: resolve
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-windows-release-metadata
+      - name: Test packaging helpers on Windows
+        run: python scripts/php-windows/test-tools.py
+      - name: Download, verify, and configure the official distribution
+        run: python scripts/php-windows/package.py prepare --release windows-release.json --archive build/upstream.zip --output build/Windows
+      - name: Inspect existing vendor Authenticode signatures
+        run: ./scripts/php-windows/Verify-Authenticode.ps1 -RuntimeRoot build/Windows -Output build/windows-signatures.json
+      - name: Test CLI, interactive worker, TLS, and persistent FastCGI after relocation
+        run: python scripts/php-windows/smoke-test.py build/Windows --openssl "$env:ProgramFiles/Git/usr/bin/openssl.exe"
+      - name: Package with file hashes and signature provenance
+        run: python scripts/php-windows/package.py archive build/Windows --signatures build/windows-signatures.json --output build/distribution
+      - name: Extract the final distribution
+        env:
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          $filename = "php-$env:PHP_VERSION-windows-x64-nts.zip"
+          $entry = (Get-Content -LiteralPath build/distribution/SHA256SUMS) -split '\s+', 2
+          $archive = Join-Path build/distribution $filename
+          if ($entry.Count -ne 2 -or $entry[1] -ne $filename -or
+              (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $entry[0]) {
+              throw 'Final runtime ZIP checksum or filename mismatch.'
+          }
+          Expand-Archive -LiteralPath $archive -DestinationPath build/extracted
+      - name: Test the actual release archive
+        run: python scripts/php-windows/smoke-test.py build/extracted/Windows --openssl "$env:ProgramFiles/Git/usr/bin/openssl.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-windows-runtime
+          path: |
+            build/distribution/*.zip
+            build/distribution/SHA256SUMS
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-windows-upstream
+          path: |
+            build/upstream.zip
+            windows-release.json
+          if-no-files-found: error
+
+  release:
+    needs: [resolve, package]
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: php-windows-runtime
+          path: distribution
+      - name: Publish Windows runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PHP_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          (cd distribution && sha256sum --check SHA256SUMS)
+          gh release create "php-runtime-windows-$PHP_VERSION-$GITHUB_RUN_ID" distribution/* \
+            --target "$GITHUB_SHA" --latest=false --title "PHP $PHP_VERSION for Windows x64 NTS" \
+            --notes "Official Windows x64 non-thread-safe PHP, configured for CLI and 4D FastCGI. Upstream EXE/DLL contents and signatures are preserved; see the bundled Authenticode report, file hashes, and redistribution notices. No new Authenticode signing is performed."
