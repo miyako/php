@@ -42,6 +42,13 @@ Class constructor($executableName : Text; $controller : 4D:C1709.Class)
 	Else 
 		This:C1470._controller:=$controller.new(This:C1470)  //custom controller
 	End if 
+
+	If (Is Windows:C1573) && (This:C1470.currentDirectory.file("php.ini").exists)
+		This:C1470.controller.variables._4D_PHP_RUNTIME:=This:C1470.currentDirectory.platformPath
+		If (This:C1470.controller.variables.PHP_INI_SCAN_DIR=Null:C1517)
+			This:C1470.controller.variables.PHP_INI_SCAN_DIR:=""
+		End if
+	End if
 	
 Function get name()->$name : Text
 	

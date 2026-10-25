@@ -1,0 +1,30 @@
+{
+  "builder_repository": "https://github.com/crazywhalecc/static-php-cli.git",
+  "builder_commit": "d7f1a88dad6d78fefa76b249b05dab1ddcff364b",
+  "builder_patches": ["sqlite-autosetup.patch"],
+  "deployment_target": "12.0",
+  "extensions": [
+    "bcmath", "calendar", "ctype", "curl", "dom", "exif", "fileinfo", "filter",
+    "ftp", "gd", "gmp", "iconv", "ldap", "libxml", "mbstring", "mbregex",
+    "openssl", "opcache", "pdo_sqlite", "phar", "posix", "readline", "session", "simplexml",
+    "sockets", "sqlite3", "tidy", "tokenizer", "xml", "xmlreader", "xmlwriter",
+    "zip", "zlib"
+  ],
+  "libraries": ["libjpeg", "libwebp", "libavif"],
+  "php_configure_flags": "--enable-gd-jis-conv --without-pcre-jit",
+  "source_overrides": {
+    "sqlite": {
+      "url": "https://www.sqlite.org/2026/sqlite-autoconf-3540100.tar.gz",
+      "filename": "sqlite-autoconf-3540100.tar.gz",
+      "algorithm": "sha3_256",
+      "checksum": "b6ced585c750916b1052667239a12c25a7ff34e7f06e1e6e01ecb0427657d9c4"
+    },
+    "libaom": {
+      "url": "https://aomedia.googlesource.com/aom/+archive/af3dc9aadc793c1b00edc003e3fc19a44fdeb574.tar.gz",
+      "filename": "libaom-pinned.tar.gz",
+      "tree_prefix": "libaom/",
+      "algorithm": "tar-tree-sha256",
+      "checksum": "7fbd6d5afa4ba825110fd28fab7904c7e7942bb93ba25a866a2b4bcfe8da2d2e"
+    }
+  }
+}

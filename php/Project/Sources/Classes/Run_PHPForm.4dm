@@ -22,7 +22,7 @@ Function post()
 	Form:C1466.history.insert(-1; $input)
 	Form:C1466.selectHistory(Form:C1466.history.length-1)
 	
-	If (Is Windows:C1573)
+	If (Is Windows:C1573) && (Not:C34(File:C1566("/RESOURCES/bin/Windows/php.ini").exists))
 		$ini:=File:C1566("/RESOURCES/php/php.ini")
 	End if 
 	

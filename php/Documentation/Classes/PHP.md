@@ -6,7 +6,7 @@
 | Parameter | Type | | Description |
 | --- | --- | --- | --- |
 | controller | 4D.Class | -> | Controller class to attach (default: `cs.PHP._PHP_Controller`) |
-| ini | 4D.File | -> | Optional `php.ini` configuration file; required on Windows when the system PHP has no default ini |
+| ini | 4D.File | -> | Optional `php.ini`; Windows uses the bundled runtime INI when present |
 
 ## Description
 
@@ -15,7 +15,11 @@
 - **One-shot** (`run`) — executes a PHP code string or file and returns immediately.
 - **Interactive** (`interactive`) — starts `php -a` as a persistent worker; subsequent input is sent via `worker.postMessage`.
 
-On Windows, passing a `php.ini` file is recommended. On macOS the system PHP is used without an ini file unless one is supplied.
+On Windows, a `Null` INI selects `/RESOURCES/bin/Windows/php.ini` when present.
+The worker receives `_4D_PHP_RUNTIME` so DLL and certificate paths remain valid
+outside the executable directory. Explicit custom INIs are honored; without a
+bundled INI the previous `-n` behavior is retained. On macOS no INI is used unless
+one is supplied.
 
 ### Properties
 
@@ -59,10 +63,7 @@ Delegates to `controller.terminate()`.
 
 ```4d
 var $PHP : cs.PHP.PHP
-If (Is Windows)
-    $ini:=File("/RESOURCES/php/php.ini")
-End if
-$PHP:=cs.PHP.PHP.new(cs.PHP._PHP_Controller; $ini)
+$PHP:=cs.PHP.PHP.new(cs.PHP._PHP_Controller; Null)
 $PHP.run("echo 'Hello, World!';")
 ALERT($PHP.controller.instance.data)
 ```
