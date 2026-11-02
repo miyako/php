@@ -18,6 +18,10 @@ RELEASES = "https://windows.php.net/downloads/releases/"
 VERSION = r"[1-9]\d*\.\d+\.\d+"
 
 
+class NotYetPublished(ValueError):
+    """php.net lists a release that windows.php.net has not published yet."""
+
+
 def fetch_json(url):
     with urllib.request.urlopen(url, timeout=60) as response:
         return json.load(response)
@@ -38,7 +42,7 @@ def resolve(windows, php, requested):
         item for item in windows.values() if item.get("version") == version
     ]
     if len(matches) != 1:
-        raise ValueError(f"Official Windows release metadata does not publish PHP {version}; refusing an older fallback")
+        raise NotYetPublished(f"Official Windows release metadata does not publish PHP {version}; refusing an older fallback")
     variants = [name for name in matches[0] if re.fullmatch(r"nts-(?:vc|vs)\d+-x64", name)]
     if len(variants) != 1:
         raise ValueError(f"Expected exactly one official x64 NTS build for PHP {version}")
@@ -206,6 +210,8 @@ def main():
     selection = commands.add_parser("resolve")
     selection.add_argument("--version", default="latest")
     selection.add_argument("--output", required=True, type=Path)
+    selection.add_argument("--allow-pending", action="store_true",
+                           help="Exit successfully without output when the Windows build is not published yet")
     preparation = commands.add_parser("prepare")
     preparation.add_argument("--release", required=True, type=Path)
     preparation.add_argument("--archive", required=True, type=Path)
@@ -216,8 +222,14 @@ def main():
     packaging.add_argument("--signatures", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "resolve":
-        release = resolve(fetch_json(RELEASES + "releases.json"),
-                          fetch_json("https://www.php.net/releases/index.php?json"), args.version)
+        try:
+            release = resolve(fetch_json(RELEASES + "releases.json"),
+                              fetch_json("https://www.php.net/releases/index.php?json"), args.version)
+        except NotYetPublished as error:
+            if not args.allow_pending:
+                raise
+            print(f"::notice::{error}; skipping until windows.php.net publishes it")
+            return
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(release, indent=2) + "\n")
         print(json.dumps(release))
