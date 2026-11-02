@@ -18,10 +18,6 @@ RELEASES = "https://windows.php.net/downloads/releases/"
 VERSION = r"[1-9]\d*\.\d+\.\d+"
 
 
-class NotYetPublished(ValueError):
-    """php.net lists a release that windows.php.net has not published yet."""
-
-
 def fetch_json(url):
     with urllib.request.urlopen(url, timeout=60) as response:
         return json.load(response)
@@ -38,17 +34,19 @@ def resolve(windows, php, requested):
         version = requested
     else:
         raise ValueError("Version must be 'latest' or a stable x.y.z version")
+    # windows.php.net republishes rebuilt binaries as x.y.z-N (e.g. 8.5.12-1).
     matches = [
-        item for item in windows.values() if item.get("version") == version
+        item for item in windows.values()
+        if re.fullmatch(re.escape(version) + r"(?:-\d+)?", item.get("version", ""))
     ]
     if len(matches) != 1:
-        raise NotYetPublished(f"Official Windows release metadata does not publish PHP {version}; refusing an older fallback")
+        raise ValueError(f"Official Windows release metadata does not publish PHP {version}; refusing an older fallback")
     variants = [name for name in matches[0] if re.fullmatch(r"nts-(?:vc|vs)\d+-x64", name)]
     if len(variants) != 1:
         raise ValueError(f"Expected exactly one official x64 NTS build for PHP {version}")
     variant = variants[0]
     archive = matches[0][variant]["zip"]
-    filename = f"php-{version}-nts-Win32-{variant.split('-')[1]}-x64.zip"
+    filename = f"php-{matches[0]['version']}-nts-Win32-{variant.split('-')[1]}-x64.zip"
     if archive["path"] != filename or not re.fullmatch(r"[0-9a-f]{64}", archive["sha256"]):
         raise ValueError("Invalid official Windows archive path or checksum")
     return {
@@ -210,8 +208,6 @@ def main():
     selection = commands.add_parser("resolve")
     selection.add_argument("--version", default="latest")
     selection.add_argument("--output", required=True, type=Path)
-    selection.add_argument("--allow-pending", action="store_true",
-                           help="Exit successfully without output when the Windows build is not published yet")
     preparation = commands.add_parser("prepare")
     preparation.add_argument("--release", required=True, type=Path)
     preparation.add_argument("--archive", required=True, type=Path)
@@ -222,21 +218,15 @@ def main():
     packaging.add_argument("--signatures", required=True, type=Path)
     args = parser.parse_args()
     if args.command == "resolve":
-        try:
-            release = resolve(fetch_json(RELEASES + "releases.json"),
-                              fetch_json("https://www.php.net/releases/index.php?json"), args.version)
-        except NotYetPublished as error:
-            if not args.allow_pending:
-                raise
-            print(f"::notice::{error}; skipping until windows.php.net publishes it")
-            return
+        release = resolve(fetch_json(RELEASES + "releases.json"),
+                          fetch_json("https://www.php.net/releases/index.php?json"), args.version)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(release, indent=2) + "\n")
         print(json.dumps(release))
     elif args.command == "prepare":
         release = json.loads(args.release.read_text())
         if not release["url"].startswith(RELEASES) or not re.fullmatch(
-            r"php-\d+\.\d+\.\d+-nts-Win32-(?:vc|vs)\d+-x64\.zip",
+            r"php-\d+\.\d+\.\d+(?:-\d+)?-nts-Win32-(?:vc|vs)\d+-x64\.zip",
             release["url"][len(RELEASES):],
         ):
             raise ValueError("Archive is not an official x64 NTS release URL")

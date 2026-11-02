@@ -42,15 +42,10 @@ jobs:
         id: release
         env:
           PHP_VERSION: ${{ inputs.php_version || 'latest' }}
-          # Scheduled runs skip quietly while windows.php.net lags behind php.net.
-          ALLOW_PENDING: ${{ github.event_name == 'schedule' && '--allow-pending' || '' }}
         run: |
-          python3 scripts/php-windows/package.py resolve --version "$PHP_VERSION" --output windows-release.json $ALLOW_PENDING
-          if [ -f windows-release.json ]; then
-            python3 -c 'import json; print("version=" + json.load(open("windows-release.json"))["version"])' >> "$GITHUB_OUTPUT"
-          fi
+          python3 scripts/php-windows/package.py resolve --version "$PHP_VERSION" --output windows-release.json
+          python3 -c 'import json; print("version=" + json.load(open("windows-release.json"))["version"])' >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
-        if: ${{ steps.release.outputs.version != '' }}
         with:
           name: php-windows-release-metadata
           path: windows-release.json
@@ -58,7 +53,6 @@ jobs:
 
   package:
     needs: resolve
-    if: ${{ needs.resolve.outputs.version != '' }}
     runs-on: windows-2025
     timeout-minutes: 30
     defaults:

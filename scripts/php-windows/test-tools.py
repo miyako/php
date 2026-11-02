@@ -44,10 +44,22 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(result["variant"], "nts-vs17-x64")
             self.assertEqual(result["sha256"], "a" * 64)
 
+    def test_rebuilt_windows_release_suffix_is_accepted(self):
+        windows, php = self.metadata()
+        windows["8.5"]["version"] = "8.5.12-1"
+        windows["8.5"]["nts-vs17-x64"]["zip"]["path"] = "php-8.5.12-1-nts-Win32-vs17-x64.zip"
+        for requested in ("latest", "8.5.12"):
+            result = package.resolve(windows, php, requested)
+            self.assertEqual(result["version"], "8.5.12")
+            self.assertTrue(result["url"].endswith("/php-8.5.12-1-nts-Win32-vs17-x64.zip"))
+        php["8"]["version"] = "8.5.1"
+        with self.assertRaisesRegex(ValueError, "refusing an older fallback"):
+            package.resolve(windows, php, "latest")
+
     def test_windows_lag_does_not_silently_select_an_older_php(self):
         windows, php = self.metadata()
         php["8"]["version"] = "8.5.13"
-        with self.assertRaisesRegex(package.NotYetPublished, "refusing an older fallback"):
+        with self.assertRaisesRegex(ValueError, "refusing an older fallback"):
             package.resolve(windows, php, "latest")
 
     def test_ts_x86_prereleases_and_bad_hashes_are_rejected(self):
